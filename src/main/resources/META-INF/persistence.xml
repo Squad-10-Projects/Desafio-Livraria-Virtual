@@ -11,9 +11,9 @@
         <class>br.com.squad10solutis.Venda</class>
         <class>br.com.squad10solutis.LivrariaVirtual</class>
         <properties>
-            <property name="javax.persistence.jdbc.url" value="jdbc:mysql://localhost:3306/livrariavirtual"/>
-            <property name="javax.persistence.jdbc.user" value="admin"/>
-            <property name="javax.persistence.jdbc.password" value="admin"/>
+            <property name="javax.persistence.jdbc.url" value="jdbc:mysql://localhost:3306/livraria"/>
+            <property name="javax.persistence.jdbc.user" value="root"/>
+            <property name="javax.persistence.jdbc.password" value="203040lL"/>
             <property name="javax.persistence.jdbc.driver" value="com.mysql.cj.jdbc.Driver"/>
 
             <property name="hibernate.dialect" value="org.hibernate.dialect.MySQLDialect"/>

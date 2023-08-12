@@ -103,19 +103,16 @@ public class LivrariaVirtual {
             System.out.println("Tipo de livro (1 - Impresso, 2 - Eletrônico): ");
             int tipoLivro = scanner.nextInt();
 
-            if (tipoLivro == 1) {
-                listarLivrosImpressos();
-            } else if (tipoLivro == 2) {
-                listarLivrosEletronicos();
+            System.out.println("Escolha o ID do livro: ");
+            int idLivro = scanner.nextInt();
+
+            Livro livroEscolhido = em.find(Livro.class, idLivro);
+            if (livroEscolhido != null) {
+                venda.getLivros().add(livroEscolhido);
+                venda.setValor(venda.getValor() + livroEscolhido.getPreco());
+            } else {
+                System.out.println("Livro não encontrado!");
             }
-
-            System.out.println("Escolha o índice do livro: ");
-            int indiceLivro = scanner.nextInt();
-
-            Livro livroEscolhido = (tipoLivro == 1) ? impressos[indiceLivro] : eletronicos[indiceLivro];
-
-            venda.getLivros().add(livroEscolhido);
-            venda.setValor(venda.getValor() + livroEscolhido.getPreco());
         }
 
         vendas[numVendas] = venda;
@@ -125,6 +122,7 @@ public class LivrariaVirtual {
         em.getTransaction().commit();
         System.out.println("Venda realizada com sucesso!");
     }
+
 
     public void listarLivrosImpressos() {
         List<Impresso> impressosList = em.createQuery("SELECT i FROM Impresso i", Impresso.class).getResultList();
