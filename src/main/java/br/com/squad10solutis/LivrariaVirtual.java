@@ -113,6 +113,7 @@ public class LivrariaVirtual {
             int indiceLivro = scanner.nextInt();
 
             Livro livroEscolhido = (tipoLivro == 1) ? impressos[indiceLivro] : eletronicos[indiceLivro];
+
             venda.getLivros().add(livroEscolhido);
             venda.setValor(venda.getValor() + livroEscolhido.getPreco());
         }
@@ -131,6 +132,7 @@ public class LivrariaVirtual {
             System.out.println(impresso);
         }
     }
+
 
 
     public void listarLivrosEletronicos() {
