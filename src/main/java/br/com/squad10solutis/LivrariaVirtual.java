@@ -4,6 +4,7 @@ import br.com.squad10solutis.model.*;
 import jakarta.persistence.EntityManager;
 import util.EntityManagerUtil;
 
+import java.util.InputMismatchException;
 import java.util.List;
 import java.util.Scanner;
 
@@ -14,13 +15,9 @@ public class LivrariaVirtual {
 
     private EntityManager em = EntityManagerUtil.getEntityManager();
 
-    private Impresso[] impressos = new Impresso[MAX_IMPRESSOS];
-    private Eletronico[] eletronicos = new Eletronico[MAX_ELETRONICOS];
-    private Venda[] vendas = new Venda[MAX_VENDAS];
-
-    private int numImpressos = 0;
-    private int numEletronicos = 0;
-    private int numVendas = 0;
+    private long numImpressos = em.createQuery("SELECT COUNT(i) FROM Impresso i", Long.class).getSingleResult();;
+    private long numEletronicos = em.createQuery("SELECT COUNT(e) FROM Eletronico e", Long.class).getSingleResult();
+    private long numVendas = em.createQuery("SELECT COUNT(v) FROM Venda v", Long.class).getSingleResult();;
 
     public void cadastrarLivro() {
         Scanner scanner = new Scanner(System.in);
@@ -30,30 +27,31 @@ public class LivrariaVirtual {
         System.out.println("2 - Eletrônico");
         System.out.println("3 - Ambos");
         int tipo = scanner.nextInt();
+        scanner.nextLine(); // Limpar o buffer
 
         if (tipo == 1 || tipo == 3) {
             if (numImpressos < MAX_IMPRESSOS) {
                 System.out.println("Informe os dados do livro impresso:");
                 System.out.print("Título: ");
-                String titulo = scanner.next();
+                String titulo = scanner.nextLine();
                 System.out.print("Autores: ");
-                String autores = scanner.next();
+                String autores = scanner.nextLine();
                 System.out.print("Editora: ");
-                String editora = scanner.next();
+                String editora = scanner.nextLine();
                 System.out.print("Preço: ");
                 float preco = scanner.nextFloat();
                 System.out.print("Frete: ");
                 float frete = scanner.nextFloat();
                 System.out.print("Estoque: ");
                 int estoque = scanner.nextInt();
+                scanner.nextLine();
 
                 Impresso impresso = new Impresso(titulo, autores, editora, preco, frete, estoque);
                 em.getTransaction().begin();
                 em.persist(impresso);
                 em.getTransaction().commit();
-                impressos[numImpressos] = impresso;
-                numImpressos++;
                 System.out.println("Livro impresso cadastrado com sucesso!");
+                numImpressos++;
             } else {
                 System.out.println("Não é possível cadastrar mais livros impressos.");
             }
@@ -63,26 +61,111 @@ public class LivrariaVirtual {
             if (numEletronicos < MAX_ELETRONICOS) {
                 System.out.println("Informe os dados do livro eletrônico:");
                 System.out.print("Título: ");
-                String titulo = scanner.next();
+                String titulo = scanner.nextLine();
                 System.out.print("Autores: ");
-                String autores = scanner.next();
+                String autores = scanner.nextLine();
                 System.out.print("Editora: ");
-                String editora = scanner.next();
+                String editora = scanner.nextLine();
                 System.out.print("Preço: ");
                 float preco = scanner.nextFloat();
                 System.out.print("Tamanho: ");
                 int tamanho = scanner.nextInt();
+                scanner.nextLine();
 
                 Eletronico eletronico = new Eletronico(titulo, autores, editora, preco, tamanho);
                 em.getTransaction().begin();
                 em.persist(eletronico);
                 em.getTransaction().commit();
-                eletronicos[numEletronicos] = eletronico;
-                numEletronicos++;
                 System.out.println("Livro eletrônico cadastrado com sucesso!");
+                numEletronicos++;
             } else {
                 System.out.println("Não é possível cadastrar mais livros eletrônicos.");
             }
+        }
+    }
+
+    public void realizarVenda() {
+        if (numVendas >= MAX_VENDAS){
+            System.out.println("Limite máximo de vendas atingido.");
+            return;
+        }
+
+        try {
+            Scanner scanner = new Scanner(System.in);
+
+            System.out.println("Nome do cliente: ");
+            String cliente = scanner.nextLine();
+
+            System.out.println("Tipo de livro (1 - Impresso, 2 - Eletrônico): ");
+            int tipoLivro = scanner.nextInt();
+            listarLivros(tipoLivro);
+
+            System.out.println("Escolha o ID do livro: ");
+            int idLivro = scanner.nextInt();
+
+            System.out.println("Quantidade de livros a comprar: ");
+            int quantidadeLivros = scanner.nextInt();
+
+            Livro livroEscolhido = em.find(Livro.class, idLivro);
+
+            if (livroEscolhido != null) {
+                if (tipoLivro == 1) {
+                    Impresso impresso = (Impresso) livroEscolhido;
+                    Venda venda = new Venda();
+                    VendaLivro vendaLivro = new VendaLivro();
+
+                    if (impresso.getEstoque() >= quantidadeLivros) {
+
+                        impresso.atualizarEstoque(quantidadeLivros);
+
+                        venda.setCliente(cliente);
+                        venda.setValor(venda.getValor() + livroEscolhido.getPreco() * quantidadeLivros);
+
+                        em.getTransaction().begin();
+                        em.persist(venda);
+                        em.getTransaction().commit();
+
+                        vendaLivro.setVenda(venda);
+                        vendaLivro.setLivro(impresso);
+
+                        em.getTransaction().begin();
+                        em.persist(vendaLivro);
+                        em.getTransaction().commit();
+
+                        System.out.println("Venda realizada com sucesso!");
+                        numVendas++;
+                    } else {
+                        System.out.println("Estoque insuficiente para essa quantidade de livros.");
+                    }
+                } else if (tipoLivro == 2) {
+                    Eletronico eletronico = (Eletronico) livroEscolhido;
+                    Venda venda = new Venda();
+                    VendaLivro vendaLivro = new VendaLivro();
+
+                    venda.setCliente(cliente);
+
+                    em.getTransaction().begin();
+                    em.persist(venda);
+                    em.getTransaction().commit();
+
+                    vendaLivro.setVenda(venda);
+                    vendaLivro.setLivro(eletronico);
+
+                    em.getTransaction().begin();
+                    em.persist(vendaLivro);
+                    em.getTransaction().commit();
+
+                    System.out.println("Venda realizada com sucesso!");
+                    numVendas++;
+                } else {
+                    System.out.println("Tipo de livro inválido.");
+                }
+            } else {
+                System.out.println("Livro não encontrado!");
+            }
+        } catch (Exception e) {
+            em.getTransaction().rollback();
+            e.printStackTrace();
         }
     }
 
@@ -138,88 +221,13 @@ public class LivrariaVirtual {
         }
     }
 
-
-    public void realizarVenda() {
-        Scanner scanner = new Scanner(System.in);
-
-        System.out.println("Nome do cliente: ");
-        String cliente = scanner.nextLine();
-
-        System.out.println("Tipo de livro (1 - Impresso, 2 - Eletrônico): ");
-        int tipoLivro = scanner.nextInt();
-        listarLivros(tipoLivro);
-
-        System.out.println("Escolha o ID do livro: ");
-        int idLivro = scanner.nextInt();
-
-        System.out.println("Quantidade de livros a comprar: ");
-        int quantidadeLivros = scanner.nextInt();
-
-        Livro livroEscolhido = em.find(Livro.class, idLivro);
-
-        if (livroEscolhido != null) {
-            if (tipoLivro == 1 ) {
-                Impresso impresso = (Impresso) livroEscolhido;
-                Venda venda = new Venda();
-                VendaLivro vendaLivro = new VendaLivro();
-
-                if (impresso.getEstoque() >= quantidadeLivros) {
-
-                    impresso.atualizarEstoque(quantidadeLivros);
-
-                    venda.setCliente(cliente);
-
-                    em.getTransaction().begin();
-                    em.persist(venda);
-                    em.getTransaction().commit();
-
-
-                    vendaLivro.setVenda(venda);
-                    vendaLivro.setLivro(impresso);
-
-                    em.getTransaction().begin();
-                    em.persist(vendaLivro);
-                    em.getTransaction().commit();
-
-
-
-                    System.out.println("Venda realizada com sucesso!");
-                } else {
-                    System.out.println("Estoque insuficiente para essa quantidade de livros.");
-                }
-            } else if (tipoLivro == 2 ) {
-                Eletronico eletronico = (Eletronico) livroEscolhido;
-                Venda venda = new Venda();
-                VendaLivro vendaLivro = new VendaLivro();
-
-                venda.setCliente(cliente);
-                em.getTransaction().begin();
-                em.persist(venda);
-                em.getTransaction().commit();
-
-                vendaLivro.setVenda(venda);
-                vendaLivro.setLivro(eletronico);
-
-                em.getTransaction().begin();
-                em.persist(vendaLivro);
-                em.getTransaction().commit();
-
-                System.out.println("Venda realizada com sucesso!");
-            } else {
-                System.out.println("Tipo de livro inválido.");
-            }
-        } else {
-            System.out.println("Livro não encontrado!");
-        }
-
-    }
-
-
-
     public void listarVendas() {
         List<Venda> vendasList = em.createQuery("SELECT v FROM Venda v", Venda.class).getResultList();
+
         for (Venda venda : vendasList) {
-            System.out.println(venda);
+            System.out.println("Venda Número: " + venda.getId());
+            System.out.println("Cliente: " + venda.getCliente());
+            System.out.println("Valor: " + venda.getValor());
         }
 
     }
@@ -236,26 +244,36 @@ public class LivrariaVirtual {
             System.out.println("4. Listar Vendas");
             System.out.println("5. Sair");
             System.out.print("Escolha uma opção: ");
-            opcao = scanner.nextInt();
 
-            switch (opcao) {
-                case 1:
-                    cadastrarLivro();
-                    break;
-                case 2:
-                    realizarVenda();
-                    break;
-                case 3:
-                    listarLivros(0);
-                    break;
-                case 4:
-                    listarVendas();
-                    break;
-                case 5:
-                    System.out.println("Saindo...");
-                    break;
-                default:
-                    System.out.println("Opção inválida!");
+            try {
+                opcao = scanner.nextInt();
+                scanner.nextLine();
+                switch (opcao) {
+                    case 1:
+                        cadastrarLivro();
+                        break;
+                    case 2:
+                        realizarVenda();
+                        break;
+                    case 3:
+                        System.out.println("1. Livros Impressos");
+                        System.out.println("2. Livros Eletrônicos");
+                        int tipoLivro = scanner.nextInt();
+                        listarLivros(tipoLivro);
+                        break;
+                    case 4:
+                        listarVendas();
+                        break;
+                    case 5:
+                        System.out.println("Saindo...");
+                        break;
+                    default:
+                        System.out.println("Opção inválida!");
+                }
+            } catch (InputMismatchException e) {
+                System.out.println("Entrada inválida. Por favor, insira um número.");
+                scanner.nextLine();
+                opcao = 0; // Definir opção para um valor inválido para continuar no loop
             }
         } while (opcao != 5);
     }

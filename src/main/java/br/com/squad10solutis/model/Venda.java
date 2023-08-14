@@ -2,6 +2,9 @@ package br.com.squad10solutis.model;
 
 import jakarta.persistence.*;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Entity
 public class Venda {
     @Id
@@ -9,16 +12,14 @@ public class Venda {
     private Long id;
 
     private static int numVendas = 0;
-    private int numero;
     private String cliente;
     private float valor;
 
     public Venda() {
     }
 
-    public Venda(Long id, int numero, String cliente, float valor) {
+    public Venda(Long id, String cliente, float valor) {
         this.id = id;
-        this.numero = numero;
         this.cliente = cliente;
         this.valor = valor;
     }
@@ -39,14 +40,6 @@ public class Venda {
         Venda.numVendas = numVendas;
     }
 
-    public int getNumero() {
-        return numero;
-    }
-
-    public void setNumero(int numero) {
-        this.numero = numero;
-    }
-
     public String getCliente() {
         return cliente;
     }
@@ -63,12 +56,11 @@ public class Venda {
         this.valor = valor;
     }
 
-
     @Override
     public String toString() {
         return String.format(
-                "Venda [ID: %d, Número: %d, Cliente: '%s', Valor: %.2f]",
-                id, numero, cliente, valor
+                "Venda [Número: %d, Cliente: '%s', Valor: %.2f]",
+                id, cliente, valor
         );
     }
 }
