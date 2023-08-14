@@ -15,6 +15,12 @@ public class Venda {
     private String cliente;
     private float valor;
 
+    @ManyToMany
+    @JoinTable(name = "venda_livro",
+            joinColumns = @JoinColumn(name = "venda_id"),
+            inverseJoinColumns = @JoinColumn(name = "livro_id"))
+    private List<Livro> livros = new ArrayList<>();
+
     public Venda() {
     }
 
@@ -54,6 +60,14 @@ public class Venda {
 
     public void setValor(float valor) {
         this.valor = valor;
+    }
+
+    public List<Livro> getLivros() {
+        return livros;
+    }
+
+    public void setLivros(List<Livro> livros) {
+        this.livros = livros;
     }
 
     @Override
