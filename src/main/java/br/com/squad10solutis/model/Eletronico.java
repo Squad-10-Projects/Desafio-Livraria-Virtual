@@ -1,4 +1,4 @@
-package br.com.squad10solutis;
+package br.com.squad10solutis.model;
 
 import jakarta.persistence.Entity;
 
@@ -21,6 +21,8 @@ public class Eletronico extends Livro {
     public void setTamanho(int tamanho) {
         this.tamanho = tamanho;
     }
+
+
 
     @Override
     public String toString() {

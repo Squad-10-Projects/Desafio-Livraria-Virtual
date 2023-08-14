@@ -1,9 +1,6 @@
-package br.com.squad10solutis;
+package br.com.squad10solutis.model;
 
 import jakarta.persistence.*;
-
-import java.util.ArrayList;
-import java.util.List;
 
 @Entity
 public class Venda {
@@ -16,18 +13,14 @@ public class Venda {
     private String cliente;
     private float valor;
 
-   @OneToMany
-    private List<Livro> livros = new ArrayList<>();
-
     public Venda() {
     }
 
-    public Venda(Long id, int numero, String cliente, float valor, List<Livro> livros) {
+    public Venda(Long id, int numero, String cliente, float valor) {
         this.id = id;
         this.numero = numero;
         this.cliente = cliente;
         this.valor = valor;
-        this.livros = livros;
     }
 
     public Long getId() {
@@ -70,29 +63,12 @@ public class Venda {
         this.valor = valor;
     }
 
-    public List<Livro> getLivros() {
-        return livros;
-    }
-
-    public void setLivros(List<Livro> livros) {
-        this.livros = livros;
-    }
-
-    public void addLivro(Livro livro, int index) {
-        livros.add(index, livro);
-    }
-
-    public void listarLivros() {
-        for (Livro livro : livros) {
-            System.out.println(livro.toString());
-        }
-    }
 
     @Override
     public String toString() {
         return String.format(
-                "Venda [ID: %d, Número: %d, Cliente: '%s', Valor: %.2f, Livros: %s]",
-                id, numero, cliente, valor, livros
+                "Venda [ID: %d, Número: %d, Cliente: '%s', Valor: %.2f]",
+                id, numero, cliente, valor
         );
     }
 }

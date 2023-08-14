@@ -1,4 +1,4 @@
-package br.com.squad10solutis;
+package br.com.squad10solutis.model;
 
 import jakarta.persistence.*;
 

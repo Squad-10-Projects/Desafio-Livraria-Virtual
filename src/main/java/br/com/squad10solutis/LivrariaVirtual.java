@@ -1,5 +1,6 @@
 package br.com.squad10solutis;
 
+import br.com.squad10solutis.model.*;
 import jakarta.persistence.EntityManager;
 import util.EntityManagerUtil;
 
@@ -85,71 +86,142 @@ public class LivrariaVirtual {
         }
     }
 
+    public void listarLivrosImpressos() {
+        List<Impresso> impressosList = em.createQuery("SELECT i FROM Impresso i", Impresso.class).getResultList();
+
+        if (impressosList.isEmpty()) {
+            System.out.println("Nenhum livro impresso encontrado.");
+        } else {
+            System.out.println("===========================");
+            System.out.println("Livros Impressos:");
+            for (Impresso impresso : impressosList) {
+                System.out.println("ID: " + impresso.getId());
+                System.out.println("Título: " + impresso.getTitulo());
+                System.out.println("Autores: " + impresso.getAutores());
+                System.out.println("Editora: " + impresso.getEditora());
+                System.out.println("Preço: " + impresso.getPreco());
+                System.out.println("Estoque: " + impresso.getEstoque());
+                System.out.println("===========================");
+            }
+        }
+
+
+    }
+
+    public void listarLivrosEletronicos() {
+        List<Eletronico> eletronicosList = em.createQuery("SELECT e FROM Eletronico e", Eletronico.class).getResultList();
+
+        if (eletronicosList.isEmpty()) {
+            System.out.println("Nenhum livro eletrônico encontrado.");
+        } else {
+            System.out.println("Livros Eletrônicos:");
+            for (Eletronico eletronico : eletronicosList) {
+                System.out.println("ID: " + eletronico.getId());
+                System.out.println("Título: " + eletronico.getTitulo());
+                System.out.println("Autores: " + eletronico.getAutores());
+                System.out.println("Editora: " + eletronico.getEditora());
+                System.out.println("Preço: " + eletronico.getPreco());
+                System.out.println("Tamanho: " + eletronico.getTamanho() + " KB");
+                System.out.println("===========================");
+            }
+        }
+    }
+
+    public void listarLivros(int tipoLivro) {
+        if (tipoLivro == 1) {
+            listarLivrosImpressos();
+        } else if (tipoLivro == 2) {
+            listarLivrosEletronicos();
+        } else {
+            listarLivrosImpressos();
+            listarLivrosEletronicos();
+        }
+    }
+
+
     public void realizarVenda() {
         Scanner scanner = new Scanner(System.in);
 
         System.out.println("Nome do cliente: ");
         String cliente = scanner.nextLine();
 
+        System.out.println("Tipo de livro (1 - Impresso, 2 - Eletrônico): ");
+        int tipoLivro = scanner.nextInt();
+        listarLivros(tipoLivro);
+
+        System.out.println("Escolha o ID do livro: ");
+        int idLivro = scanner.nextInt();
+
         System.out.println("Quantidade de livros a comprar: ");
         int quantidadeLivros = scanner.nextInt();
 
-        Venda venda = new Venda();
-        venda.setNumero(numVendas + 1);
-        venda.setCliente(cliente);
+        Livro livroEscolhido = em.find(Livro.class, idLivro);
 
-        for (int i = 0; i < quantidadeLivros; i++) {
-            System.out.println("Livro " + (i + 1) + ":");
-            System.out.println("Tipo de livro (1 - Impresso, 2 - Eletrônico): ");
-            int tipoLivro = scanner.nextInt();
+        if (livroEscolhido != null) {
+            if (tipoLivro == 1 ) {
+                Impresso impresso = (Impresso) livroEscolhido;
+                Venda venda = new Venda();
+                VendaLivro vendaLivro = new VendaLivro();
 
-            System.out.println("Escolha o ID do livro: ");
-            int idLivro = scanner.nextInt();
+                if (impresso.getEstoque() >= quantidadeLivros) {
 
-            Livro livroEscolhido = em.find(Livro.class, idLivro);
-            if (livroEscolhido != null) {
-                venda.getLivros().add(livroEscolhido);
-                venda.setValor(venda.getValor() + livroEscolhido.getPreco());
+                    impresso.atualizarEstoque(quantidadeLivros);
+
+                    venda.setCliente(cliente);
+
+                    em.getTransaction().begin();
+                    em.persist(venda);
+                    em.getTransaction().commit();
+
+
+                    vendaLivro.setVenda(venda);
+                    vendaLivro.setLivro(impresso);
+
+                    em.getTransaction().begin();
+                    em.persist(vendaLivro);
+                    em.getTransaction().commit();
+
+
+
+                    System.out.println("Venda realizada com sucesso!");
+                } else {
+                    System.out.println("Estoque insuficiente para essa quantidade de livros.");
+                }
+            } else if (tipoLivro == 2 ) {
+                Eletronico eletronico = (Eletronico) livroEscolhido;
+                Venda venda = new Venda();
+                VendaLivro vendaLivro = new VendaLivro();
+
+                venda.setCliente(cliente);
+                em.getTransaction().begin();
+                em.persist(venda);
+                em.getTransaction().commit();
+
+                vendaLivro.setVenda(venda);
+                vendaLivro.setLivro(eletronico);
+
+                em.getTransaction().begin();
+                em.persist(vendaLivro);
+                em.getTransaction().commit();
+
+                System.out.println("Venda realizada com sucesso!");
             } else {
-                System.out.println("Livro não encontrado!");
+                System.out.println("Tipo de livro inválido.");
             }
+        } else {
+            System.out.println("Livro não encontrado!");
         }
 
-        vendas[numVendas] = venda;
-        numVendas++;
-        em.getTransaction().begin();
-        em.persist(venda);
-        em.getTransaction().commit();
-        System.out.println("Venda realizada com sucesso!");
     }
 
 
-    public void listarLivrosImpressos() {
-        List<Impresso> impressosList = em.createQuery("SELECT i FROM Impresso i", Impresso.class).getResultList();
-        for (Impresso impresso : impressosList) {
-            System.out.println(impresso);
-        }
-    }
-
-
-
-    public void listarLivrosEletronicos() {
-        List<Eletronico> eletronicosList = em.createQuery("SELECT e FROM Eletronico e", Eletronico.class).getResultList();
-        for (Eletronico eletronico : eletronicosList) {
-            System.out.println(eletronico);
-        }
-    }
-
-    public void listarLivros() {
-        listarLivrosImpressos();
-        listarLivrosEletronicos();
-    }
 
     public void listarVendas() {
         List<Venda> vendasList = em.createQuery("SELECT v FROM Venda v", Venda.class).getResultList();
         for (Venda venda : vendasList) {
             System.out.println(venda);
         }
+
     }
 
     public void exibirMenu() {
@@ -174,7 +246,7 @@ public class LivrariaVirtual {
                     realizarVenda();
                     break;
                 case 3:
-                    listarLivros();
+                    listarLivros(0);
                     break;
                 case 4:
                     listarVendas();

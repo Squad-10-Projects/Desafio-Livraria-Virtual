@@ -1,4 +1,4 @@
-package br.com.squad10solutis;
+package br.com.squad10solutis.model;
 
 import jakarta.persistence.Entity;
 
@@ -34,9 +34,11 @@ public class Impresso extends Livro {
         this.estoque = estoque;
     }
 
-    public void atualizarEstoque() {
-        if (estoque > 0) {
-            estoque--;
+    public void atualizarEstoque(int quantidade) {
+        if (estoque >= quantidade) {
+            estoque -= quantidade;
+        } else {
+            System.out.println("Estoque insuficiente.");
         }
     }
 
